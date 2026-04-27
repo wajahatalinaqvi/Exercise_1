@@ -1,0 +1,15 @@
+[phases.setup]
+nixPkgs = ['...', 'php83', 'php83Extensions.mbstring', 'php83Extensions.pdo', 'php83Extensions.pdo_sqlite', 'php83Extensions.tokenizer', 'php83Extensions.xml', 'php83Extensions.ctype', 'php83Extensions.fileinfo', 'php83Extensions.curl']
+
+[phases.build]
+cmds = [
+    'composer install --no-dev --optimize-autoloader',
+    'php artisan config:cache',
+    'php artisan route:cache',
+    'php artisan view:cache',
+    'npm install',
+    'npm run build'
+]
+
+[start]
+cmd = 'php -d variables_order=EGPCS -S 0.0.0.0:$PORT -t public/'
