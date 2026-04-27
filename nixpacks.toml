@@ -1,6 +1,14 @@
 [phases.setup]
 nixPkgs = ['php83', 'php83Extensions.mbstring', 'php83Extensions.pdo', 'php83Extensions.pdo_sqlite', 'php83Extensions.tokenizer', 'php83Extensions.xml', 'php83Extensions.ctype', 'php83Extensions.fileinfo', 'php83Extensions.curl', 'php83Packages.composer', 'nodejs_20', 'npm-10_x']
 
+[phases.install]
+cmds = [
+    'mkdir -p storage/framework/sessions storage/framework/views storage/framework/cache storage/logs',
+    'mkdir -p database',
+    'touch database/database.sqlite',
+    'chmod -R 775 storage bootstrap/cache'
+]
+
 [phases.build]
 cmds = [
     'composer install --no-dev --optimize-autoloader',
@@ -12,4 +20,4 @@ cmds = [
 ]
 
 [start]
-cmd = 'php -d variables_order=EGPCS -S 0.0.0.0:$PORT -t public/'
+cmd = 'php artisan migrate --force && php -d variables_order=EGPCS -S 0.0.0.0:$PORT -t public/'
