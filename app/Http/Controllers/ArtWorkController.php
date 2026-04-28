@@ -29,69 +29,67 @@ class ArtWorkController extends Controller
         return $this->response($validateInput);
     }
 
-    public function response($validate){
-           if ($validate != null) {
-                return response()->json(
-                    [
-                        'success' => true,
-                        'data' => ['id' => collect($validate)->sortBy('time')->pluck('id')->last()],
-                        'error' => null
-                    ]
-                );
-            }
-             else  {
-                return response()->json(
-                    [
-                        'success' => false,
-                        'data' => null,
-                        'error' => 'No approved artwork found'
-                    ]
-                );
-          
+    public function response($validate)
+    {
+        if ($validate != null) {
+            return response()->json(
+                [
+                    'success' => true,
+                    'data' => ['id' => collect($validate)->sortBy('time')->pluck('id')->last()],
+                    'error' => null
+                ]
+            );
+        } else {
+            return response()->json(
+                [
+                    'success' => false,
+                    'data' => null,
+                    'error' => 'No approved artwork found'
+                ]
+            );
         }
     }
 
-    public function pricing(Request $request){
+    public function pricing(Request $request)
+    {
         $request->validate([
             'input' => 'required|array',
             'input.quantity' => 'required|integer',
             'input.tiers' => 'required|array',
             'input.tiers.*.min' => 'required|integer',
             'input.tiers.*.price' => 'required|numeric',
-           
 
-            
+
+
         ]);
-        $minQt= $request->input('input.quantity');
-        $tier= collect($request->input('input.tiers'))->filter(function ($tier) use($minQt) {
-            if ( $minQt >= $tier['min']) {
-                return $tier['price'];
+        $minQt = $request->input('input.quantity');
+        $sortTier = collect($request->input('input.tiers'))->sortBy('min');
+
+        $valideTiers = [];
+        foreach ($sortTier as $tier) {
+            if ($minQt >= $tier['min']) {
+                $valideTiers[] = $tier;
             }
-            else{
-                return response()->json(
-                    [
-                        'success' => false,
-                        'data' => null,
-                        'error' => 'no valid tiers found'
-                    ]
-                );
-            }
-        })->sortby('min')->last();
+        }
+
+    if(empty($valideTiers)){
+        return response()->json(
+            [
+                'success' => false,
+                'data' => null,
+                'error' => 'no valid tiers found'
+            ]
+        );
+    }
+    else{
         return response()->json(
             [
                 'success' => true,
-                'data' => ['price' => $tier['price']],
+                'data' => ['price' => collect($valideTiers)->last()['price']],
                 'error' => null
             ]
         );
-      
-    
-       
-
     }
 
-    
+       
 }
-
-
-
