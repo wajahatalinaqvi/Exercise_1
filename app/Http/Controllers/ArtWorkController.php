@@ -51,6 +51,46 @@ class ArtWorkController extends Controller
         }
     }
 
+    public function pricing(Request $request){
+        $request->validate([
+            'input' => 'required|array',
+            'input.quantity' => 'required|integer',
+            'input.tiers' => 'required|array',
+            'input.tiers.*.min' => 'required|integer',
+            'input.tiers.*.price' => 'required|numeric',
+           
+
+            
+        ]);
+        $minQt= $request->input('input.quantity');
+        $tier= collect($request->input('input.tiers'))->filter(function ($tier) use($minQt) {
+            if ( $minQt >= $tier['min']) {
+                return $tier['price'];
+            }
+            else{
+                return response()->json(
+                    [
+                        'success' => false,
+                        'data' => null,
+                        'error' => 'no valid tiers found'
+                    ]
+                );
+            }
+        })->sortby('min')->last();
+        return response()->json(
+            [
+                'success' => true,
+                'data' => ['price' => $tier['price']],
+                'error' => null
+            ]
+        );
+      
+    
+       
+
+    }
+
+    
 }
 
 
