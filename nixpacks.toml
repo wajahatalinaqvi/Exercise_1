@@ -12,7 +12,6 @@ cmds = [
 [phases.build]
 cmds = [
     'composer install --no-dev --optimize-autoloader',
-    'php artisan config:cache',
     'php artisan route:cache',
     'php artisan view:cache',
     'npm install',
@@ -20,4 +19,4 @@ cmds = [
 ]
 
 [start]
-cmd = 'php artisan migrate --force && php -d variables_order=EGPCS -S 0.0.0.0:$PORT -t public/'
+cmd = 'php artisan migrate --force && php artisan config:cache && php -d variables_order=EGPCS -S 0.0.0.0:$PORT -t public/'
