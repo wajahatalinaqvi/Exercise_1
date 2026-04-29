@@ -91,5 +91,31 @@ class ArtWorkController extends Controller
         );
     }
     }
-       
+    
+    public function validateCart(Request $request){
+        $request->validate([
+            'input' => 'required|array',
+            'input.*.id' => 'required|integer',
+            'input.*.required' => 'required|boolean',
+            'input.*.done' => 'required|boolean',
+        ]);
+
+        $inputs = collect($request->input('input'))->sortBy('id');
+        $inValidItem= $inputs->filter(function($item){
+            return $item['required'] && !$item['done'];
+        })->pluck('id')->toArray();
+        if(empty($inValidItem)) {
+            return response()->json([
+                'success' => true,
+                'valid' => true,
+                'invalid_items' => []
+            ]);
+        }
+        return response()->json([
+            'success' => true,
+            'valid' => empty($inValidItem),
+            'invalid_items' => $inValidItem
+        ]);
+    }
 }
+
