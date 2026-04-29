@@ -106,15 +106,17 @@ class ArtWorkController extends Controller
         })->pluck('id')->toArray();
         if(empty($inValidItem)) {
             return response()->json([
-                'success' => true,
+                'success' => false,
                 'valid' => true,
-                'invalid_items' => []
+                'invalid_items' => [],
+                'error'=>'No invalid items found'
             ]);
         }
         return response()->json([
             'success' => true,
             'valid' => empty($inValidItem),
-            'invalid_items' => $inValidItem
+            'invalid_items' => $inValidItem,
+            'error'=>null
         ]);
     }
 }
