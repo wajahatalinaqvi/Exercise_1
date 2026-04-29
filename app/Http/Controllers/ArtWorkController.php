@@ -107,15 +107,21 @@ class ArtWorkController extends Controller
         if(empty($inValidItem)) {
             return response()->json([
                 'success' => false,
-                'valid' => true,
-                'invalid_items' => [],
+                'data'=>[
+                    'valid' => true,
+                'invalid_items' => [],      
+                ],
+               
                 'error'=>'No invalid items found'
             ]);
         }
         return response()->json([
             'success' => true,
+            'data'=>[
+
             'valid' => empty($inValidItem),
             'invalid_items' => $inValidItem,
+            ],
             'error'=>null
         ]);
     }
