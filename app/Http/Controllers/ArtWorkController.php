@@ -142,21 +142,35 @@ class ArtWorkController extends Controller
         $remainingQty = $orderQty;
         $allocations =$vendors->map(function($vendor) use(&$remainingQty){
             if($remainingQty <= 0){
-                return ['allocated_qty' => 0];
+                return [
+                    'id' => $vendor['id'],
+                    'allocated' => 0
+                ];
             }
             $allocated = min($vendor['stock'], $remainingQty);
             $remainingQty -= $allocated;
-            return response()->json([
-                'success' => true,
-                'data'=>[
-                    'vendor_id'=>$vendor['id'],
-                    'allocated' => $allocated,
-                ],
-                'error'=>null
-            ]);
+            $vendor_id = $vendor['id'];
+
+            return [
+                'id' => $vendor_id,
+                'allocated' => $allocated
+            ];
+        
 
         });
-        return $allocations;
+       $sortedAllocations = $allocations->sortBy('id')->values()->all();
+        if($remainingQty > 0){
+            return response()->json([
+                'success' => true,
+                'data' => null,
+                'error' => 'Insufficient stock to fulfill the order'
+            ]);
+        }
+        return response()->json([
+            'success' => true,
+            'data' => $sortedAllocations,
+            'error' => null
+        ]);
  
      
     }
