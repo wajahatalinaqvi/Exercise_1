@@ -125,5 +125,40 @@ class ArtWorkController extends Controller
             'error'=>null
         ]);
     }
+
+
+    public function multiVendorAllocation(Request $request){
+        $request-> validate([
+            'input' => 'required|array',
+            'input.order_qty' => 'required|integer',
+            'input.vendors' => 'required|array',
+            'input.vendors.*.id' => 'required|integer',
+            'input.vendors.*.stock' => 'required|integer',
+        ]);
+
+
+        $orderQty = $request->input('input.order_qty');
+        $vendors =collect($request->input('input.vendors'))->sortBy('stock');
+        $remainingQty = $orderQty;
+        $allocations =$vendors->map(function($vendor) use(&$remainingQty){
+            if($remainingQty <= 0){
+                return ['allocated_qty' => 0];
+            }
+            $allocated = min($vendor['stock'], $remainingQty);
+            $remainingQty -= $allocated;
+            return response()->json([
+                'success' => true,
+                'data'=>[
+                    'vendor_id'=>$vendor['id'],
+                    'allocated' => $allocated,
+                ],
+                'error'=>null
+            ]);
+
+        });
+        return $allocations;
+ 
+     
+    }
 }
 

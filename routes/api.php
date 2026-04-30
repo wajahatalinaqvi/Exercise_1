@@ -10,3 +10,4 @@ Route::get('/user', function (Request $request) {
 Route::post('/exercise-1-artwork-version', [ArtWorkController::class, 'index'])->name('artwork.submit' );
 Route::post('/exercise-2-tier-pricing', [ArtWorkController::class, 'pricing'])->name('pricing.submit' );
 Route::post('/exercise-3-cart-validator', [ArtWorkController::class, 'validateCart'])->name('cart.validate' );
+Route::post('/exercise-4-vendor-allocation', [ArtWorkController::class, 'multiVendorAllocation'])->name('vendor.allocation' );
