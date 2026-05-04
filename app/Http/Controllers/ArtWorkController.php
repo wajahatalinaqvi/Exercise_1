@@ -174,5 +174,41 @@ class ArtWorkController extends Controller
  
      
     }
+
+    public function discountConflictResolver(Request $request){
+    $validated =    $request->validate([
+            "input"=>'required|array',
+            "input.price"=>'required|numeric|min:0',
+            'input.discounts'=>'required|array',
+            'input.discounts.*.type'=>'required|string|in:percentage,flat',
+            'input.discounts.*.value'=>'required|numeric|min:0',
+        ]);
+       
+        $price = $validated['input']['price'];
+        $discounts = collect($validated['input']['discounts']);
+        $prices = $discounts->map(function($discount) use ($price){
+            if($discount['type'] === 'percentage'){
+                return $price - ($price * ($discount['value'] / 100));
+            }
+            if ($discount['type'] === 'flat') {
+                return max(0, $price - $discount['value']);
+            }
+            else {
+                return max(0, $price - $discount['value']);
+            }
+        });
+       $finalPrices= $prices->map(function($discountedPrice) {
+            return max(0, $discountedPrice);
+        });
+       
+      $bestPrice=$finalPrices->min();
+        return response()->json([
+            'success' => true,
+            'data' => ['final_price' => $bestPrice],
+            'error' => null
+        ]);
+
+
+    }
 }
 
