@@ -12,3 +12,4 @@ Route::post('/exercise-2-tier-pricing', [ArtWorkController::class, 'pricing'])->
 Route::post('/exercise-3-cart-validator', [ArtWorkController::class, 'validateCart'])->name('cart.validate' );
 Route::post('/exercise-4-vendor-allocation', [ArtWorkController::class, 'multiVendorAllocation'])->name('vendor.allocation' );
 Route::post('/exercise-5-discount', [ArtWorkController::class, 'discountConflictResolver'])->name('discount.apply' );
+Route::post('/exercise-6-approval-flow', [ArtWorkController::class, 'flowValidator'])->name('approval.flow' );
