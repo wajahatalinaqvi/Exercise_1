@@ -226,13 +226,13 @@ class ArtWorkController extends Controller
             ]);
         }
 
+        // first dependency should be null or empty and second step should be dependent to the first step if it gives null then give errror
         foreach ($steps as $step) {
             if (empty($step['depends_on'])) {
                 continue;
             }
             $dependencies = explode(',', $step['depends_on']);
             $firstDependency = $dependencies[0] ?? null;
-        // first dependency should be null or empty
             if ($firstDependency && !empty($firstDependency) && !in_array($firstDependency, $ids)) {
                 return response()->json([
                     'success' => false,
@@ -248,6 +248,7 @@ class ArtWorkController extends Controller
                 ]);
             }
             foreach ($dependencies as $dependency) {
+            
                 if (!in_array($dependency, $ids)) {
                     return response()->json([
                         'success' => false,
@@ -271,5 +272,37 @@ class ArtWorkController extends Controller
             ]); 
 
 
+    }
+    public function inventoryReservation(Request $request){
+        $validate = $request->validate([
+            'input' => 'required|array',
+            'input.stock' => 'required|integer|min:0',
+            'input.requests'=>'required|array',
+        ]);
+
+        $stock = $validate['input']['stock'];
+        $requests =$validate['input']['requests'];
+        $remainingStock = $stock;
+        $results = [];
+    foreach($requests as $req){
+        if (!is_int($req) || $req < 0){
+            $results[]=false;
+            continue;
+        }
+            if ($remainingStock >= $req){
+                $results[]=true;
+                $remainingStock -= $req;
+
+            }
+            else{
+                $results[]=false;
+
+            }
+        }
+        return response()->json([
+            'success' => true,
+            'data' => $results,
+            'error' => null
+        ]);
     }
 }
