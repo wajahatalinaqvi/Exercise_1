@@ -306,7 +306,8 @@ class ArtWorkController extends Controller
         ]);
     }
     public function shipmentTracker(Request $request){
-        $validate = $request->validate([
+        try{
+$validate = $request->validate([
             'input'=>'required|array',
             'input.ordered'=>'required|numeric|min:0',
             'input.shipped'=>'required|array'
@@ -342,6 +343,15 @@ class ArtWorkController extends Controller
             ],
             'error' => null
         ]);
+        }
+        catch(\Exception $e){
+            return response()->json([
+                'success' => false,
+                'data' => null,
+                'error' => 'An error occurred: ' . $e->getMessage()
+            ]);
+        }
+        
     
     }
 }
