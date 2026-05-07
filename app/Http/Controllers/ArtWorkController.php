@@ -307,7 +307,7 @@ class ArtWorkController extends Controller
     }
     public function shipmentTracker(Request $request){
         try{
-$validate = $request->validate([
+    $validate = $request->validate([
             'input'=>'required|array',
             'input.ordered'=>'required|numeric|min:0',
             'input.shipped'=>'required|array'
