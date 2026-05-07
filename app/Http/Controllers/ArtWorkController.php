@@ -307,23 +307,23 @@ class ArtWorkController extends Controller
     }
     public function shipmentTracker(Request $request){
         try{
-    $validate = $request->validate([
-            'input'=>'required|array',
-            'input.ordered'=>'required|numeric|min:0',
-            'input.shipped'=>'required|array'
-        ]);
-        $ordered = $validate['input']['ordered'];
-        $shipped = $validate['input']['shipped'];
-        $totalShipped = array_sum($shipped);
-        $shipped = max(0, $totalShipped - $ordered);
+            $validate = $request->validate([
+                'input'=>'required|array',
+                'input.ordered'=>'required|numeric|min:0',
+                'input.shipped'=>'required|array'
+            ]);
+            $ordered = $validate['input']['ordered'];
+            $shipped = $validate['input']['shipped'];
+            $totalShipped = array_sum($shipped);
+            $shipped = max(0, $totalShipped - $ordered);
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'remaining: ' => $shipped
-            ],
-            'error' => null
-        ]);
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'remaining' => $shipped
+                ],
+                'error' => null
+            ]);
         }
         catch(\Illuminate\Validation\ValidationException $e){
             return response()->json([
@@ -339,8 +339,6 @@ class ArtWorkController extends Controller
                 'error' => 'An error occurred: ' . $e->getMessage()
             ]);
         }
-        
-    
     }
 }
 
