@@ -325,6 +325,13 @@ class ArtWorkController extends Controller
             'error' => null
         ]);
         }
+        catch(\Illuminate\Validation\ValidationException $e){
+            return response()->json([
+                'success' => false,
+                'data' => null,
+                'error' => 'Validation error: ' . $e->getMessage()
+            ]);
+        }
         catch(\Exception $e){
             return response()->json([
                 'success' => false,
