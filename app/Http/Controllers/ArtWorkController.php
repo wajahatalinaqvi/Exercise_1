@@ -343,7 +343,6 @@ class ArtWorkController extends Controller
                 'success' => false,
                 'data'    => null,
                 'error'   => 'Validation failed',
-                'messages' => $e->errors()
             ], 422);
 
         }
