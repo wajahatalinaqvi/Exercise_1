@@ -305,4 +305,44 @@ class ArtWorkController extends Controller
             'error' => null
         ]);
     }
+    public function shipmentTracker(Request $request){
+        $validate = $request->validate([
+            'input'=>'required|array',
+            'input.ordered'=>'required|numeric|min:0',
+            'input.shipped'=>'required|array'
+        ]);
+        $ordered = $validate['input']['ordered'];
+        $shipped = $validate['input']['shipped'];
+        if ($ordered < 0){
+            return response()->json([
+                'success' => false,
+                'data' => null,
+                'error' => 'Invalid ordered quantity'
+            ]);
+        }
+        $totalShipped =0;
+        foreach($shipped as $qty){
+            if($qty<0){
+                return response()->json([
+                    'success' => false,
+                    'data' => null,
+                    'error' => 'Invalid shipped quantity'
+                ]);
+            }
+            $totalShipped += $qty;
+        }
+        $remaining = $ordered - $totalShipped;
+        if($remaining < 0){
+          $remaining = 0;
+        }
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'remaining: ' => $remaining
+            ],
+            'error' => null
+        ]);
+    
+    }
 }
+
