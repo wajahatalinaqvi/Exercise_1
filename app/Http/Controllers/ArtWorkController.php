@@ -389,7 +389,6 @@ class ArtWorkController extends Controller
     }
         //code...
    catch (\Exception $th) {
-        //throw $th;
         return response()->json([
             'success' => false,
             'data'    => null,
