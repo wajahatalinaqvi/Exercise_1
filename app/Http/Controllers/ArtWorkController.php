@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
 use Nette\Schema\ValidationException;
 
@@ -354,4 +355,50 @@ class ArtWorkController extends Controller
                 'message' => $e->getMessage()
             ], 500);
         }
-    }}
+    }
+    
+    public function webhookDeduplicator(Request $request){
+
+    try {
+        $validate= Validator::make($request->all(),[
+            'input' => 'required|array',
+            'input.*.id' => 'required|string',
+            'input.*.time' => 'required|numeric|min:0',
+        ],[
+            'input.required' => 'Input array is required.',
+            'input.array' => 'Input must be an array.',
+            'input.*.id.required' => 'Each item must have an id.',
+            'input.*.id.string' => 'Each id must be a string.',
+            'input.*.time.required' => 'Each item must have a timestamp.',
+            'input.*.time.numeric' => 'Each timestamp must be a numeric value.',
+        ]);
+        if ($validate->fails()) {
+            return response()->json([
+                'success' => false,
+                'data'    => null,
+                'error'   => $validate->errors()->first(),
+            ], 422);
+        }
+        $inputs = collect($request->input('input'))->sortBy('time');
+        $uniqueIds= $inputs->pluck('id')->unique()->values()->all();
+        return response()->json([
+            'success' => true,
+            'data'    => $uniqueIds,
+            'error'   => null,
+        ], 200);
+    }
+        //code...
+   catch (\Exception $th) {
+        //throw $th;
+        return response()->json([
+            'success' => false,
+            'data'    => null,
+            'error'   => 'An unexpected error occurred.',
+            'message' => "Something went wrong while processing the request."
+        ], 500);
+    }
+
+
+    
+    }
+}
