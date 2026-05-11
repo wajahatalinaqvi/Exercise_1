@@ -16,3 +16,4 @@ Route::post('/exercise-6-approval-flow', [ArtWorkController::class, 'flowValidat
 Route::post('/exercise-7-inventory', [ArtWorkController::class, 'inventoryReservation'])->name('inventory.reservation' );
 Route::post('/exercise-8-shipment', [ArtWorkController::class, 'shipmentTracker'])->name('shipment.tracker' );
 Route::post('/exercise-9-webhook', [ArtWorkController::class, 'webhookDeduplicator'])->name('webhook.deduplicator' );
+Route::post('/exercise-10-quote-expiry', [ArtWorkController::class, 'quoteExpiryEngine'])->name('quote.expiry');

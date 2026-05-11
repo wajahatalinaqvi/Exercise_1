@@ -17,11 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
 // Retrieved 2026-04-27, License - CC BY-SA 4.0
 
 ->withMiddleware(function (Middleware $middleware) {
-    $middleware->validateCsrfTokens(except: [
-        
-        'exercise-1-artwork-version', 
-        '/exercise-2-tier-pricing'  
-    ]); 
+ 
 })
 
     ->withExceptions(function (Exceptions $exceptions): void {

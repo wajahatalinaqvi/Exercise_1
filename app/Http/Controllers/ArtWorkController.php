@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
 use Nette\Schema\ValidationException;
@@ -242,7 +243,7 @@ class ArtWorkController extends Controller
                     'error' => "Invalid first dependency: Step {$step['id']} has an invalid first dependency {$firstDependency}"
                 ]);
             }
-            if (in_array($step['id'], $dependencies)) { 
+            if (in_array($step['id'], $dependencies)) {
                 return response()->json([
                     'success' => false,
                     'data' => null,
@@ -250,7 +251,7 @@ class ArtWorkController extends Controller
                 ]);
             }
             foreach ($dependencies as $dependency) {
-            
+
                 if (!in_array($dependency, $ids)) {
                     return response()->json([
                         'success' => false,
@@ -266,39 +267,35 @@ class ArtWorkController extends Controller
                     ]);
                 }
             }
-        }   
-            return response()->json([
-                'success' => true,
-                'data' => ['valid' => true],
-                'error' => null
-            ]); 
-
-
+        }
+        return response()->json([
+            'success' => true,
+            'data' => ['valid' => true],
+            'error' => null
+        ]);
     }
-    public function inventoryReservation(Request $request){
+    public function inventoryReservation(Request $request)
+    {
         $validate = $request->validate([
             'input' => 'required|array',
             'input.stock' => 'required|integer|min:0',
-            'input.requests'=>'required|array',
+            'input.requests' => 'required|array',
         ]);
 
         $stock = $validate['input']['stock'];
-        $requests =$validate['input']['requests'];
+        $requests = $validate['input']['requests'];
         $remainingStock = $stock;
         $results = [];
-    foreach($requests as $req){
-        if (!is_int($req) || $req < 0){
-            $results[]=false;
-            continue;
-        }
-            if ($remainingStock >= $req){
-                $results[]=true;
-                $remainingStock -= $req;
-
+        foreach ($requests as $req) {
+            if (!is_int($req) || $req < 0) {
+                $results[] = false;
+                continue;
             }
-            else{
-                $results[]=false;
-
+            if ($remainingStock >= $req) {
+                $results[] = true;
+                $remainingStock -= $req;
+            } else {
+                $results[] = false;
             }
         }
         return response()->json([
@@ -307,9 +304,9 @@ class ArtWorkController extends Controller
             'error' => null
         ]);
     }
-    public function shipmentTracker(Request $request)  {
-        try
-        {
+    public function shipmentTracker(Request $request)
+    {
+        try {
             $validated = $request->validate([
                 'input.ordered' => 'required|integer|min:1',
                 'input.shipped' => 'required|array|min:1',
@@ -337,17 +334,13 @@ class ArtWorkController extends Controller
                 'data'    => ['remaining' => $remaining],
                 'error'   => null
             ], 200);
-
-
         } catch (ValidationException $e) {
             return response()->json([
                 'success' => false,
                 'data'    => null,
                 'error'   => 'Validation failed',
             ], 422);
-
-        }
-         catch (\Exception $e) {
+        } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'data'    => null,
@@ -356,48 +349,98 @@ class ArtWorkController extends Controller
             ], 500);
         }
     }
-    
-    public function webhookDeduplicator(Request $request){
 
-    try {
-        $validate= Validator::make($request->all(),[
-            'input' => 'required|array',
-            'input.*.id' => 'required|string',
-            'input.*.time' => 'required|numeric|min:0',
-        ],[
-            'input.required' => 'Input array is required.',
-            'input.array' => 'Input must be an array.',
-            'input.*.id.required' => 'Each item must have an id.',
-            'input.*.id.string' => 'Each id must be a string.',
-            'input.*.time.required' => 'Each item must have a timestamp.',
-            'input.*.time.numeric' => 'Each timestamp must be a numeric value.',
-        ]);
-        if ($validate->fails()) {
+    public function webhookDeduplicator(Request $request)
+    {
+
+        try {
+            $validate = Validator::make($request->all(), [
+                'input' => 'required|array',
+                'input.*.id' => 'required|string',
+                'input.*.time' => 'required|numeric|min:0',
+            ], [
+                'input.required' => 'Input array is required.',
+                'input.array' => 'Input must be an array.',
+                'input.*.id.required' => 'Each item must have an id.',
+                'input.*.id.string' => 'Each id must be a string.',
+                'input.*.time.required' => 'Each item must have a timestamp.',
+                'input.*.time.numeric' => 'Each timestamp must be a numeric value.',
+            ]);
+            if ($validate->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'data'    => null,
+                    'error'   => $validate->errors()->first(),
+                ], 422);
+            }
+            $inputs = collect($request->input('input'))->sortBy('time');
+            $uniqueIds = $inputs->pluck('id')->unique()->values()->all();
+            return response()->json([
+                'success' => true,
+                'data'    => $uniqueIds,
+                'error'   => null,
+            ], 200);
+        }
+    
+        catch (\Exception $th) {
             return response()->json([
                 'success' => false,
                 'data'    => null,
-                'error'   => $validate->errors()->first(),
-            ], 422);
+                'error'   => 'An unexpected error occurred.',
+                'message' => "Something went wrong while processing the request."
+            ], 500);
         }
-        $inputs = collect($request->input('input'))->sortBy('time');
-        $uniqueIds= $inputs->pluck('id')->unique()->values()->all();
-        return response()->json([
-            'success' => true,
-            'data'    => $uniqueIds,
-            'error'   => null,
-        ], 200);
-    }
-        //code...
-   catch (\Exception $th) {
-        return response()->json([
-            'success' => false,
-            'data'    => null,
-            'error'   => 'An unexpected error occurred.',
-            'message' => "Something went wrong while processing the request."
-        ], 500);
     }
 
+    public function quoteExpiryEngine(Request $request)
+    {
+        try {
+            $validate = Validator::make($request->all(), [
+                'input' => 'required|array',
+                'input.created_at' => 'required|date_format:Y-m-d',
+                'input.valid_days' => 'required|integer|min:0',
+                'input.current_date' => 'required|date_format:Y-m-d',
+            ], [
+                'input.required' => 'Input array is required.',
+                'input.array' => 'Input must be an array.',
+                'input.created_at.required' => 'Created date is required.',
+                'input.created_at.date' => 'Created date must be a valid date.',
+                'input.created_at.date_format' => 'Created date must be in Y-m-d format.',
+                'input.valid_days.required' => 'Valid days is required.',
+                'input.valid_days.integer' => 'Valid days must be an integer.',
+                'input.valid_days.min' => 'Valid days cannot be negative.',
+                'input.current_date.required' => 'Current date is required.',
+                'input.current_date.date' => 'Current date must be a valid date.',
+                'input.current_date.date_format' => 'Current date must be in Y-m-d format.',
+            ]);
+            if ($validate->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'data'    => null,
+                    'error'   => $validate->errors()->first(),
+                ], 422);
+            }
+            $createdAt = Carbon::parse($validate->input('input.created_at'));
+            // $validDays = $validate->input('input.valid_days');
+            // $currentDate = Carbon::parse($validate->input('input.current_date'));
+            // $expiryDate = $createdAt->copy()->addDays($validDays);
+            // $isValid = $currentDate->lessThanOrEqualTo($expiryDate);
 
-    
+            dd("hello". $createdAt);
+           
+            return response()->json([
+                'success' => true,
+                // 'data'    => ["valid" => $isValid],
+                'error'   => null,
+            ], 200);
+
+        } catch (\Exception $th) {
+            return response()->json([
+                'success' => false,
+                'data'    => null,
+                'error'   => 'An unexpected error occurred.',
+                'message' => "Something went wrong while processing the request."
+            ], 500);
+        }
     }
 }
