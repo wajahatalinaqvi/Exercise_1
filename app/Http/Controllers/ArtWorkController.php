@@ -421,12 +421,11 @@ class ArtWorkController extends Controller
                 ], 422);
             }
             $createdAt = Carbon::parse($validate->input('input.created_at'));
-            // $validDays = $validate->input('input.valid_days');
-            // $currentDate = Carbon::parse($validate->input('input.current_date'));
-            // $expiryDate = $createdAt->copy()->addDays($validDays);
-            // $isValid = $currentDate->lessThanOrEqualTo($expiryDate);
+            $validDays = $validate->input('input.valid_days');
+            $currentDate = Carbon::parse($validate->input('input.current_date'));
+            $expiryDate = $createdAt->copy()->addDays($validDays);
+            $isValid = $currentDate->lessThanOrEqualTo($expiryDate);
 
-            dd("hello". $createdAt);
            
             return response()->json([
                 'success' => true,
