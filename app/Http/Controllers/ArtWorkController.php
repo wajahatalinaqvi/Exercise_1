@@ -443,4 +443,80 @@ class ArtWorkController extends Controller
             ], 500);
         }
     }
+
+
+   
+    public function productVisibilityEngine(Request $request){
+
+     try {
+   $validate = Validator::make($request->all(),[
+        'input'=>'required|array',
+        'input.customer.tags'=>'required|array',
+        'input.customer.tags.*'=>'required|string',
+        'input.products'=>'required|array',
+        'input.products.*.id'=>'required|integer',
+        'input.products.*.allow'=>'array|nullable',
+        'input.products.*.allow.*'=>'required|string',
+        'input.products.*.block'=>'array|nullable',
+        'input.products.*.block.*'=>'required|string',
+    ],[
+        'input.required'=>'Input array is required.',
+        'input.array'=>'Input must be an array.',
+        'input.customer.tags.required'=>'Customer tags are required.',
+        'input.customer.tags.array'=>'Customer tags must be an array.',
+        'input.customer.tags.*.required'=>'Each customer tag is required.',
+        'input.customer.tags.*.string'=>'Each customer tag must be a string.',
+        'input.products.required'=>'Products array is required.',
+        'input.products.array'=>'Products must be an array.',
+        'input.products.*.id.required'=>'Each product must have an id.',
+        'input.products.*.id.integer'=>'Each product id must be an integer.',
+        'input.products.*.allow.required'=>'Each product must have an allow list.',
+        'input.products.*.allow.array'=>'Each product allow list must be an array.',
+        'input.products.*.allow.*.required'=>'Each allow tag is required.',
+        'input.products.*.allow.*.string'=>'Each allow tag must be a string.',
+        'input.products.*.block.required'=>'Each product must have a block list.',
+        'input.products.*.block.array'=>'Each product block list must be an array.',
+        'input.products.*.block.*.required'=>'Each block tag is required.',
+        'input.products.*.block.*.string'=>'Each block tag must be a string.',
+    ]);
+    if($validate->fails()){
+        return response()->json([
+            'success'=>false,
+            'data'=>null,
+            'error'=> $validate->errors()->first(),
+        ],422);
+    }
+    $validated = $validate->validated();
+    $customerTags = collect($validated['input']['customer']['tags']);
+    $visibleProducts = collect($validated['input']['products'])->filter(function($product)use ($customerTags){
+        $allow = collect($product['allow'] ?? []);
+        $block = collect($product['block'] ?? []);
+     if($block->intersect($customerTags)->isNotEmpty()){
+        return false;
+     }
+     if($allow->isEmpty()){
+        return true;
+     }
+
+    //  if customer tags is not intersect with allow then that prodct is not visible.
+        return $allow->intersect($customerTags)->isNotEmpty();
+    })->pluck('id')->values()->all();
+        
+    return response()->json([
+        'success'=>true,
+        'data'=>$visibleProducts,
+        'error'=>null,
+    ],200);
+    
+     } catch (\Exception $th) {
+        //throw $th;
+
+        return response()->json([
+            'success' => false,
+            'data'    => null,
+            'error'   => 'An unexpected error occurred.',
+            'message' => "Something went wrong while processing the request."
+        ], 500);
+     }
+   }
 }
