@@ -519,4 +519,71 @@ class ArtWorkController extends Controller
         ], 500);
      }
    }
+
+
+   public function  bundlePricingEngine(Request $request){
+
+    try {
+        
+            $validate = Validator::make($request->all(),[
+            "input"=>'required|array',
+            'input.items'=>'required|array',
+            'input.items.*.id'=>'required|integer',
+            'input.items.*.price'=>'required|numeric|min:0',
+            'input.bundle_price'=>'required|numeric|min:0',
+            'input.apply_bundle'=>'required|boolean',
+            
+
+            ],
+        [
+                'input.required'=>'Input array is required.',
+                'input.array'=>'Input must be an array.',
+                'input.items.required'=>'Items array is required.',
+                'input.items.array'=>'Items must be an array.',
+                'input.items.*.id.required'=>'Each item must have an id.',
+                'input.items.*.id.integer'=>'Each item id must be an integer.',
+                'input.items.*.price.required'=>'Each item must have a price.',
+                'input.items.*.price.float'=>'Each item price must be a float.',
+                'input.items.*.price.min'=>'Each item price must be greater than or equal to 0.',
+                'input.bundle_price.required'=>'Bundle price is required.',
+                'input.bundle_price.float'=>'Bundle price must be a float.',
+                'input.bundle_price.min'=>'Bundle price must be greater than or equal to 0.',
+                'input.apply_bundle.required'=>'Apply bundle is required.',
+                'input.apply_bundle.boolean'=>'Apply bundle must be a boolean.',
+        ]);
+                    if($validate->fails()){
+                        return response()->json([
+                            'success'=>false,
+                            'data'=>null,
+                            'error'=>$validate->errors()->first(),
+                        ],422);
+                    }
+                    $validated = $validate->validated();    
+                    $individualTotal = collect($validated['input']['items'])->sum('price');
+
+                    $final_price =$individualTotal;
+
+                    if($validated['input']['apply_bundle'] && $validated['input']['bundle_price'] < $individualTotal){
+                        $final_price = $validated['input']['bundle_price'];
+                    }
+                    return response()->json([
+                        'success'=>true,
+                        'data'=>['final_price'=>$final_price],
+                        'error'=>null,
+                    ],200);
+
+                    
+
+                        } catch (\Exception $th) {
+                        return response()->json([
+                            'success'=>false,   
+                            'data'=>null,
+                            'error'=>$th->getMessage(),
+                            'message'=>'An unexpected error occurred.',
+                        ],500);
+
+                        }
+
+                    }
+
 }

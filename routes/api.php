@@ -18,3 +18,4 @@ Route::post('/exercise-8-shipment', [ArtWorkController::class, 'shipmentTracker'
 Route::post('/exercise-9-webhook', [ArtWorkController::class, 'webhookDeduplicator'])->name('webhook.deduplicator' );
 Route::post('/exercise-10-quote-expiry', [ArtWorkController::class, 'quoteExpiryEngine'])->name('quote.expiry');
 Route::post('/exercise-11-product-visibility', [ArtWorkController::class, 'productVisibilityEngine'])->name('product.visibility');
+Route::post('/exercise-12-bundle-pricing', [ArtWorkController::class, 'bundlePricingEngine'])->name('bundle.pricing');
