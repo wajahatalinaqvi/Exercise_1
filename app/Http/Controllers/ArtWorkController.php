@@ -586,4 +586,69 @@ class ArtWorkController extends Controller
 
                     }
 
+
+
+     public function mergeCarts(Request $request){
+        try {
+           $validate= Validator::make($request->all(),[
+        'input'=> 'required|array',
+        'input.guest'=>'array|nullable',
+        'input.guest.*.id'=>'required|integer',
+        'input.guest.*.qty'=>'required|integer|min:0',
+        'input.user'=>'array|nullable',
+        'input.user.*.id'=>'required|integer',
+        'input.user.*.qty'=>'required|integer|min:0',
+     ],[
+        'input.required'=>'Input array is required.',
+        'input.array'=>'Input must be an array.',
+        'input.guest.required'=>'Guest cart is required.',
+        'input.guest.array'=>'Guest cart must be an array.',    
+        'input.guest.*.id.required'=>'Each guest cart item must have an id.',
+        'input.guest.*.id.integer'=>'Each guest cart item id must be an integer.',
+        'input.guest.*.qty.required'=>'Each guest cart item must have a quantity.',
+        'input.guest.*.qty.integer'=>'Each guest cart item quantity must be an integer.',
+        'input.guest.*.qty.min'=>'Each guest cart item quantity must be at least 0.',
+        'input.user.required'=>'User cart is required.',
+        'input.user.array'=>'User cart must be an array.',
+        'input.user.*.id.required'=>'Each user cart item must have an id.',
+        'input.user.*.id.integer'=>'Each user cart item id must be an integer.',
+        'input.user.*.qty.required'=>'Each user cart item must have a quantity.',
+        'input.user.*.qty.integer'=>'Each user cart item quantity must be an integer.',
+        'input.user.*.qty.min'=>'Each user cart item quantity must be at least 0.',
+        ]);
+     if($validate->fails()){
+        return response()->json([
+            'success'=>false,
+            'data'=>null,
+            'error'=>$validate->errors()->first(),
+        ],422);
+     } else {
+
+        $validated = $validate->validated();
+        $guestCart = collect($validated['input']['guest']);
+        $userCart = collect($validated['input']['user']);
+        $mergeCart = $guestCart->merge($userCart)->groupBy('id')->map(function($items,$id){
+            return [
+                'id'=>$id,
+                'qty'=>$items->sum('qty'),
+            ];
+        })->values()->all();
+        
+        return response()->json([
+            'success'=>true,
+            'error'=>null,
+            'data'=>$mergeCart,
+        ],200);
+     }
+        } catch (\Exception $th) {
+            return response()->json([
+                'success'=>false,   
+                'data'=>null,
+                'error'=>$th->getMessage(),
+                'message'=>'An unexpected error occurred.',
+            ],500);
+        }
+
+   
+     }
 }
