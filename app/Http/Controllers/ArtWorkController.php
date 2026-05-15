@@ -651,4 +651,48 @@ class ArtWorkController extends Controller
 
    
      }
+
+     public function findtwoNumberIndices(Request $request){
+
+     $validate = Validator::make($request->all(),[
+        'input'=>'required|array',
+        'input.nums'=>'required|array|min:2',
+        'input.nums.*'=>'required|numeric',
+        'input.target'=>'required|numeric',
+     ],[
+        'input.required'=>'Input array is required.',
+        'input.array'=>'Input must be an array.',
+        'input.nums.required'=>'Nums array is required.',
+        'input.nums.array'=>'Nums must be an array.',
+        'input.nums.min'=>'Nums array must have at least 2 elements.',
+        'input.nums.*.required'=>'Each num is required.',
+        'input.nums.*.numeric'=>'Each num must be numeric.',
+        'input.target.required'=>'Target is required.',
+        'input.target.numeric'=>'Target must be numeric.',
+
+     ]);
+
+     $validated = $validate->validated();
+     $nums = $validated['input']['nums'];
+     $target = $validated['input']['target'];
+     $numToIndex = [];
+     foreach($nums as $index=>$num){
+        $complement = $target - $num;
+        if(isset($numToIndex[$complement])){
+            return response()->json([
+                'success'=>true,
+                'data'=>[$numToIndex[$complement],$index],
+                'error'=>null,
+            ],200);
+
+            
+            }
+            $numToIndex[$num]=$index;
+            }
+            return response()->json([
+               'success'=>false,
+               'data'=>null,
+               'error'=>'No two numbers sum up to the target.',
+            ],200);
+}
 }

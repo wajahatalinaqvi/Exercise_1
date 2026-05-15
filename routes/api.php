@@ -20,3 +20,4 @@ Route::post('/exercise-10-quote-expiry', [ArtWorkController::class, 'quoteExpiry
 Route::post('/exercise-11-product-visibility', [ArtWorkController::class, 'productVisibilityEngine'])->name('product.visibility');
 Route::post('/exercise-12-bundle-pricing', [ArtWorkController::class, 'bundlePricingEngine'])->name('bundle.pricing');
 Route::post('/exercise-13-cart-merge', [ArtWorkController::class, 'mergeCarts'])->name('merge.carts');
+Route::post('/exercise-14-upsell', [ArtWorkController::class, 'findtwoNumberIndices'])->name('upsell.suggestions');
