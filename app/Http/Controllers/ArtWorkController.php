@@ -695,4 +695,78 @@ class ArtWorkController extends Controller
                'error'=>'No two numbers sum up to the target.',
             ],200);
 }
+
+
+public function shippingEngineRule(){
+    $validate =Validator::make(request()->all(),[
+        'input'=> 'required|array',
+        'input.order'=>'required|array',
+'input.order.weight'=>'required|numeric|min:0',
+'input.order.country'=>'required|string',
+'input.rules'=>'required|array|min:1',
+'input.rules.*.id'=>'required|integer',
+'input.rules.*.max_weight'=>'nullable|numeri',
+'input.rules.*.country'=>'nullable|string',
+'input.rules.*.method'=>'required|string',
+'input.rules.*.priority'=>'required|integer|min:0',
+    ],[
+        'input.required'=>'Input array is required.',
+        'input.array'=>'Input must be an array.',
+        'input.order.required'=>'Order object is required.',
+        'input.order.array'=>'Order must be an array.',
+        'input.order.weight.required'=>'Order weight is required.',
+        'input.order.weight.numeric'=>'Order weight must be numeric.',
+        'input.order.weight.min'=>'Order weight cannot be negative.',
+        'input.order.country.required'=>'Order country is required.',
+        'input.order.country.string'=>'Order country must be a string.',
+        'input.rules.required'=>'Rules array is required.',
+        'input.rules.array'=>'Rules must be an array.',
+        'input.rules.min'=>'At least one rule is required.',
+        'input.rules.*.id.required'=>'Each rule must have an id.',
+        'input.rules.*.id.integer'=>'Each rule id must be an integer.',
+        'input.rules.*.max_weight.numeric'=>'Rule max_weight must be numeric.',
+        'input.rules.*.max_weight.min'=>'Rule max_weight cannot be negative.',
+        'input.rules.*.country.string'=>'Rule country must be a string.',
+        'input.rules.*.method.required'=>'Each rule must have a shipping method.',
+        'input.rules.*.method.string'=>'Each rule method must be a string.',
+        'input.rules.*.priority.required'=>'Each rule must have a priority.',
+        'input.rules.*.priority.integer'=>'Each rule priority must be an integer.',
+        'input.rules.*.priority.min'=>'Each rule priority cannot be negative.',
+
+    ]);
+    if($validate->fails()){
+        return response()->json([
+            'success'=>false,
+            'data'=>null,       
+            'error'=>$validate->errors()->first(),
+        ],422);}
+
+    $validated = $validate->validated();
+    $orderWeight = $validated['input']['order']['weight'];
+    $orderCountry = $validated['input']['order']['country'];
+    $matchedRules = collect($validated['input']['rules'])->filter(function($rule) use ($orderWeight,$orderCountry){
+        if(isset($rule['max_weight']) && $orderWeight > $rule['max_weight']){
+            return false;
+        }
+        if(isset($rule['country']) && $orderCountry !== $rule['country']){
+            return false;
+        }
+        return true;
+    })->sortBy('priority')->first();
+
+    if(empty($matchedRules)){
+        return response()->json([
+            'success'=>false,
+            'data'=>null,
+            'error'=>'No shipping method matches the order criteria.',
+        ],200);
+    }
+
+    return response()->json([
+        'success'=>true,
+        'data'=>$matchedRules['method'],
+        'error'=>null,
+    ],200);
+
+}
 }

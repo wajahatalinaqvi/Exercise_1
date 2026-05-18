@@ -21,3 +21,4 @@ Route::post('/exercise-11-product-visibility', [ArtWorkController::class, 'produ
 Route::post('/exercise-12-bundle-pricing', [ArtWorkController::class, 'bundlePricingEngine'])->name('bundle.pricing');
 Route::post('/exercise-13-cart-merge', [ArtWorkController::class, 'mergeCarts'])->name('merge.carts');
 Route::post('/exercise-14-upsell', [ArtWorkController::class, 'findtwoNumberIndices'])->name('upsell.suggestions');
+Route::post('/exercise-15-shipping-rule', [ArtWorkController::class, 'shippingEngineRule'])->name('shipping.rule');
