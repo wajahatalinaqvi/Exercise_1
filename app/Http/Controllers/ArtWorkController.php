@@ -705,7 +705,7 @@ public function shippingEngineRule(){
 'input.order.country'=>'required|string',
 'input.rules'=>'required|array|min:1',
 'input.rules.*.id'=>'required|integer',
-'input.rules.*.max_weight'=>'nullable|numeri',
+'input.rules.*.max_weight'=>'nullable|numeric',
 'input.rules.*.country'=>'nullable|string',
 'input.rules.*.method'=>'required|string',
 'input.rules.*.priority'=>'required|integer|min:0',
