@@ -22,3 +22,4 @@ Route::post('/exercise-12-bundle-pricing', [ArtWorkController::class, 'bundlePri
 Route::post('/exercise-13-cart-merge', [ArtWorkController::class, 'mergeCarts'])->name('merge.carts');
 Route::post('/exercise-14-upsell', [ArtWorkController::class, 'findtwoNumberIndices'])->name('upsell.suggestions');
 Route::post('/exercise-15-shipping-rule', [ArtWorkController::class, 'shippingEngineRule'])->name('shipping.rule');
+Route::post('/exercise-16-fraud-detector', [ArtWorkController::class, 'fraudDetector'])->name('fraud.detector');

@@ -380,9 +380,7 @@ class ArtWorkController extends Controller
                 'data'    => $uniqueIds,
                 'error'   => null,
             ], 200);
-        }
-    
-        catch (\Exception $th) {
+        } catch (\Exception $th) {
             return response()->json([
                 'success' => false,
                 'data'    => null,
@@ -427,13 +425,12 @@ class ArtWorkController extends Controller
             $expiryDate = $createdAt->copy()->addDays($validDays);
             $isValid = $currentDate->lessThanOrEqualTo($expiryDate);
 
-           
+
             return response()->json([
                 'success' => true,
                 'data'    => ["valid" => $isValid],
                 'error'   => null,
             ], 200);
-
         } catch (\Exception $th) {
             return response()->json([
                 'success' => false,
@@ -445,328 +442,391 @@ class ArtWorkController extends Controller
     }
 
 
-   
-    public function productVisibilityEngine(Request $request){
 
-     try {
-   $validate = Validator::make($request->all(),[
-        'input'=>'required|array',
-        'input.customer.tags'=>'required|array',
-        'input.customer.tags.*'=>'required|string',
-        'input.products'=>'required|array',
-        'input.products.*.id'=>'required|integer',
-        'input.products.*.allow'=>'array|nullable',
-        'input.products.*.allow.*'=>'required|string',
-        'input.products.*.block'=>'array|nullable',
-        'input.products.*.block.*'=>'required|string',
-    ],[
-        'input.required'=>'Input array is required.',
-        'input.array'=>'Input must be an array.',
-        'input.customer.tags.required'=>'Customer tags are required.',
-        'input.customer.tags.array'=>'Customer tags must be an array.',
-        'input.customer.tags.*.required'=>'Each customer tag is required.',
-        'input.customer.tags.*.string'=>'Each customer tag must be a string.',
-        'input.products.required'=>'Products array is required.',
-        'input.products.array'=>'Products must be an array.',
-        'input.products.*.id.required'=>'Each product must have an id.',
-        'input.products.*.id.integer'=>'Each product id must be an integer.',
-        'input.products.*.allow.required'=>'Each product must have an allow list.',
-        'input.products.*.allow.array'=>'Each product allow list must be an array.',
-        'input.products.*.allow.*.required'=>'Each allow tag is required.',
-        'input.products.*.allow.*.string'=>'Each allow tag must be a string.',
-        'input.products.*.block.required'=>'Each product must have a block list.',
-        'input.products.*.block.array'=>'Each product block list must be an array.',
-        'input.products.*.block.*.required'=>'Each block tag is required.',
-        'input.products.*.block.*.string'=>'Each block tag must be a string.',
-    ]);
-    if($validate->fails()){
-        return response()->json([
-            'success'=>false,
-            'data'=>null,
-            'error'=> $validate->errors()->first(),
-        ],422);
-    }
-    $validated = $validate->validated();
-    $customerTags = collect($validated['input']['customer']['tags']);
-    $visibleProducts = collect($validated['input']['products'])->filter(function($product)use ($customerTags){
-        $allow = collect($product['allow'] ?? []);
-        $block = collect($product['block'] ?? []);
-     if($block->intersect($customerTags)->isNotEmpty()){
-        return false;
-     }
-     if($allow->isEmpty()){
-        return true;
-     }
+    public function productVisibilityEngine(Request $request)
+    {
 
-    //  if customer tags is not intersect with allow then that prodct is not visible.
-        return $allow->intersect($customerTags)->isNotEmpty();
-    })->pluck('id')->values()->all();
-        
-    return response()->json([
-        'success'=>true,
-        'data'=>$visibleProducts,
-        'error'=>null,
-    ],200);
-    
-     } catch (\Exception $th) {
-        //throw $th;
-
-        return response()->json([
-            'success' => false,
-            'data'    => null,
-            'error'   => 'An unexpected error occurred.',
-            'message' => "Something went wrong while processing the request."
-        ], 500);
-     }
-   }
-
-
-   public function  bundlePricingEngine(Request $request){
-
-    try {
-        
-            $validate = Validator::make($request->all(),[
-            "input"=>'required|array',
-            'input.items'=>'required|array',
-            'input.items.*.id'=>'required|integer',
-            'input.items.*.price'=>'required|numeric|min:0',
-            'input.bundle_price'=>'required|numeric|min:0',
-            'input.apply_bundle'=>'required|boolean',
-            
-
-            ],
-        [
-                'input.required'=>'Input array is required.',
-                'input.array'=>'Input must be an array.',
-                'input.items.required'=>'Items array is required.',
-                'input.items.array'=>'Items must be an array.',
-                'input.items.*.id.required'=>'Each item must have an id.',
-                'input.items.*.id.integer'=>'Each item id must be an integer.',
-                'input.items.*.price.required'=>'Each item must have a price.',
-                'input.items.*.price.float'=>'Each item price must be a float.',
-                'input.items.*.price.min'=>'Each item price must be greater than or equal to 0.',
-                'input.bundle_price.required'=>'Bundle price is required.',
-                'input.bundle_price.float'=>'Bundle price must be a float.',
-                'input.bundle_price.min'=>'Bundle price must be greater than or equal to 0.',
-                'input.apply_bundle.required'=>'Apply bundle is required.',
-                'input.apply_bundle.boolean'=>'Apply bundle must be a boolean.',
-        ]);
-                    if($validate->fails()){
-                        return response()->json([
-                            'success'=>false,
-                            'data'=>null,
-                            'error'=>$validate->errors()->first(),
-                        ],422);
-                    }
-                    $validated = $validate->validated();    
-                    $individualTotal = collect($validated['input']['items'])->sum('price');
-
-                    $final_price =$individualTotal;
-
-                    if($validated['input']['apply_bundle'] && $validated['input']['bundle_price'] < $individualTotal){
-                        $final_price = $validated['input']['bundle_price'];
-                    }
-                    return response()->json([
-                        'success'=>true,
-                        'data'=>['final_price'=>$final_price],
-                        'error'=>null,
-                    ],200);
-
-                    
-
-                        } catch (\Exception $th) {
-                        return response()->json([
-                            'success'=>false,   
-                            'data'=>null,
-                            'error'=>$th->getMessage(),
-                            'message'=>'An unexpected error occurred.',
-                        ],500);
-
-                        }
-
-                    }
-
-
-
-     public function mergeCarts(Request $request){
         try {
-           $validate= Validator::make($request->all(),[
-        'input'=> 'required|array',
-        'input.guest'=>'array|nullable',
-        'input.guest.*.id'=>'required|integer',
-        'input.guest.*.qty'=>'required|integer|min:0',
-        'input.user'=>'array|nullable',
-        'input.user.*.id'=>'required|integer',
-        'input.user.*.qty'=>'required|integer|min:0',
-     ],[
-        'input.required'=>'Input array is required.',
-        'input.array'=>'Input must be an array.',
-        'input.guest.required'=>'Guest cart is required.',
-        'input.guest.array'=>'Guest cart must be an array.',    
-        'input.guest.*.id.required'=>'Each guest cart item must have an id.',
-        'input.guest.*.id.integer'=>'Each guest cart item id must be an integer.',
-        'input.guest.*.qty.required'=>'Each guest cart item must have a quantity.',
-        'input.guest.*.qty.integer'=>'Each guest cart item quantity must be an integer.',
-        'input.guest.*.qty.min'=>'Each guest cart item quantity must be at least 0.',
-        'input.user.required'=>'User cart is required.',
-        'input.user.array'=>'User cart must be an array.',
-        'input.user.*.id.required'=>'Each user cart item must have an id.',
-        'input.user.*.id.integer'=>'Each user cart item id must be an integer.',
-        'input.user.*.qty.required'=>'Each user cart item must have a quantity.',
-        'input.user.*.qty.integer'=>'Each user cart item quantity must be an integer.',
-        'input.user.*.qty.min'=>'Each user cart item quantity must be at least 0.',
-        ]);
-     if($validate->fails()){
-        return response()->json([
-            'success'=>false,
-            'data'=>null,
-            'error'=>$validate->errors()->first(),
-        ],422);
-     } else {
+            $validate = Validator::make($request->all(), [
+                'input' => 'required|array',
+                'input.customer.tags' => 'required|array',
+                'input.customer.tags.*' => 'required|string',
+                'input.products' => 'required|array',
+                'input.products.*.id' => 'required|integer',
+                'input.products.*.allow' => 'array|nullable',
+                'input.products.*.allow.*' => 'required|string',
+                'input.products.*.block' => 'array|nullable',
+                'input.products.*.block.*' => 'required|string',
+            ], [
+                'input.required' => 'Input array is required.',
+                'input.array' => 'Input must be an array.',
+                'input.customer.tags.required' => 'Customer tags are required.',
+                'input.customer.tags.array' => 'Customer tags must be an array.',
+                'input.customer.tags.*.required' => 'Each customer tag is required.',
+                'input.customer.tags.*.string' => 'Each customer tag must be a string.',
+                'input.products.required' => 'Products array is required.',
+                'input.products.array' => 'Products must be an array.',
+                'input.products.*.id.required' => 'Each product must have an id.',
+                'input.products.*.id.integer' => 'Each product id must be an integer.',
+                'input.products.*.allow.required' => 'Each product must have an allow list.',
+                'input.products.*.allow.array' => 'Each product allow list must be an array.',
+                'input.products.*.allow.*.required' => 'Each allow tag is required.',
+                'input.products.*.allow.*.string' => 'Each allow tag must be a string.',
+                'input.products.*.block.required' => 'Each product must have a block list.',
+                'input.products.*.block.array' => 'Each product block list must be an array.',
+                'input.products.*.block.*.required' => 'Each block tag is required.',
+                'input.products.*.block.*.string' => 'Each block tag must be a string.',
+            ]);
+            if ($validate->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'data' => null,
+                    'error' => $validate->errors()->first(),
+                ], 422);
+            }
+            $validated = $validate->validated();
+            $customerTags = collect($validated['input']['customer']['tags']);
+            $visibleProducts = collect($validated['input']['products'])->filter(function ($product) use ($customerTags) {
+                $allow = collect($product['allow'] ?? []);
+                $block = collect($product['block'] ?? []);
+                if ($block->intersect($customerTags)->isNotEmpty()) {
+                    return false;
+                }
+                if ($allow->isEmpty()) {
+                    return true;
+                }
 
-        $validated = $validate->validated();
-        $guestCart = collect($validated['input']['guest']);
-        $userCart = collect($validated['input']['user']);
-        $mergeCart = $guestCart->merge($userCart)->groupBy('id')->map(function($items,$id){
-            return [
-                'id'=>$id,
-                'qty'=>$items->sum('qty'),
-            ];
-        })->values()->all();
-        
-        return response()->json([
-            'success'=>true,
-            'error'=>null,
-            'data'=>$mergeCart,
-        ],200);
-     }
+                //  if customer tags is not intersect with allow then that prodct is not visible.
+                return $allow->intersect($customerTags)->isNotEmpty();
+            })->pluck('id')->values()->all();
+
+            return response()->json([
+                'success' => true,
+                'data' => $visibleProducts,
+                'error' => null,
+            ], 200);
+        } catch (\Exception $th) {
+            //throw $th;
+
+            return response()->json([
+                'success' => false,
+                'data'    => null,
+                'error'   => 'An unexpected error occurred.',
+                'message' => "Something went wrong while processing the request."
+            ], 500);
+        }
+    }
+
+
+    public function  bundlePricingEngine(Request $request)
+    {
+
+        try {
+
+            $validate = Validator::make(
+                $request->all(),
+                [
+                    "input" => 'required|array',
+                    'input.items' => 'required|array',
+                    'input.items.*.id' => 'required|integer',
+                    'input.items.*.price' => 'required|numeric|min:0',
+                    'input.bundle_price' => 'required|numeric|min:0',
+                    'input.apply_bundle' => 'required|boolean',
+
+
+                ],
+                [
+                    'input.required' => 'Input array is required.',
+                    'input.array' => 'Input must be an array.',
+                    'input.items.required' => 'Items array is required.',
+                    'input.items.array' => 'Items must be an array.',
+                    'input.items.*.id.required' => 'Each item must have an id.',
+                    'input.items.*.id.integer' => 'Each item id must be an integer.',
+                    'input.items.*.price.required' => 'Each item must have a price.',
+                    'input.items.*.price.float' => 'Each item price must be a float.',
+                    'input.items.*.price.min' => 'Each item price must be greater than or equal to 0.',
+                    'input.bundle_price.required' => 'Bundle price is required.',
+                    'input.bundle_price.float' => 'Bundle price must be a float.',
+                    'input.bundle_price.min' => 'Bundle price must be greater than or equal to 0.',
+                    'input.apply_bundle.required' => 'Apply bundle is required.',
+                    'input.apply_bundle.boolean' => 'Apply bundle must be a boolean.',
+                ]
+            );
+            if ($validate->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'data' => null,
+                    'error' => $validate->errors()->first(),
+                ], 422);
+            }
+            $validated = $validate->validated();
+            $individualTotal = collect($validated['input']['items'])->sum('price');
+
+            $final_price = $individualTotal;
+
+            if ($validated['input']['apply_bundle'] && $validated['input']['bundle_price'] < $individualTotal) {
+                $final_price = $validated['input']['bundle_price'];
+            }
+            return response()->json([
+                'success' => true,
+                'data' => ['final_price' => $final_price],
+                'error' => null,
+            ], 200);
         } catch (\Exception $th) {
             return response()->json([
-                'success'=>false,   
-                'data'=>null,
-                'error'=>$th->getMessage(),
-                'message'=>'An unexpected error occurred.',
-            ],500);
+                'success' => false,
+                'data' => null,
+                'error' => $th->getMessage(),
+                'message' => 'An unexpected error occurred.',
+            ], 500);
         }
-
-   
-     }
-
-     public function findtwoNumberIndices(Request $request){
-
-     $validate = Validator::make($request->all(),[
-        'input'=>'required|array',
-        'input.nums'=>'required|array|min:2',
-        'input.nums.*'=>'required|numeric',
-        'input.target'=>'required|numeric',
-     ],[
-        'input.required'=>'Input array is required.',
-        'input.array'=>'Input must be an array.',
-        'input.nums.required'=>'Nums array is required.',
-        'input.nums.array'=>'Nums must be an array.',
-        'input.nums.min'=>'Nums array must have at least 2 elements.',
-        'input.nums.*.required'=>'Each num is required.',
-        'input.nums.*.numeric'=>'Each num must be numeric.',
-        'input.target.required'=>'Target is required.',
-        'input.target.numeric'=>'Target must be numeric.',
-
-     ]);
-
-     $validated = $validate->validated();
-     $nums = $validated['input']['nums'];
-     $target = $validated['input']['target'];
-     $numToIndex = [];
-     foreach($nums as $index=>$num){
-        $complement = $target - $num;
-        if(isset($numToIndex[$complement])){
-            return response()->json([
-                'success'=>true,
-                'data'=>[$numToIndex[$complement],$index],
-                'error'=>null,
-            ],200);
-
-            
-            }
-            $numToIndex[$num]=$index;
-            }
-            return response()->json([
-               'success'=>false,
-               'data'=>null,
-               'error'=>'No two numbers sum up to the target.',
-            ],200);
-}
-
-
-public function shippingEngineRule(){
-    $validate =Validator::make(request()->all(),[
-        'input'=> 'required|array',
-        'input.order'=>'required|array',
-'input.order.weight'=>'required|numeric|min:0',
-'input.order.country'=>'required|string',
-'input.rules'=>'required|array|min:1',
-'input.rules.*.id'=>'required|integer',
-'input.rules.*.max_weight'=>'nullable|numeric',
-'input.rules.*.country'=>'nullable|string',
-'input.rules.*.method'=>'required|string',
-'input.rules.*.priority'=>'required|integer|min:0',
-    ],[
-        'input.required'=>'Input array is required.',
-        'input.array'=>'Input must be an array.',
-        'input.order.required'=>'Order object is required.',
-        'input.order.array'=>'Order must be an array.',
-        'input.order.weight.required'=>'Order weight is required.',
-        'input.order.weight.numeric'=>'Order weight must be numeric.',
-        'input.order.weight.min'=>'Order weight cannot be negative.',
-        'input.order.country.required'=>'Order country is required.',
-        'input.order.country.string'=>'Order country must be a string.',
-        'input.rules.required'=>'Rules array is required.',
-        'input.rules.array'=>'Rules must be an array.',
-        'input.rules.min'=>'At least one rule is required.',
-        'input.rules.*.id.required'=>'Each rule must have an id.',
-        'input.rules.*.id.integer'=>'Each rule id must be an integer.',
-        'input.rules.*.max_weight.numeric'=>'Rule max_weight must be numeric.',
-        'input.rules.*.max_weight.min'=>'Rule max_weight cannot be negative.',
-        'input.rules.*.country.string'=>'Rule country must be a string.',
-        'input.rules.*.method.required'=>'Each rule must have a shipping method.',
-        'input.rules.*.method.string'=>'Each rule method must be a string.',
-        'input.rules.*.priority.required'=>'Each rule must have a priority.',
-        'input.rules.*.priority.integer'=>'Each rule priority must be an integer.',
-        'input.rules.*.priority.min'=>'Each rule priority cannot be negative.',
-
-    ]);
-    if($validate->fails()){
-        return response()->json([
-            'success'=>false,
-            'data'=>null,       
-            'error'=>$validate->errors()->first(),
-        ],422);}
-
-    $validated = $validate->validated();
-    $orderWeight = $validated['input']['order']['weight'];
-    $orderCountry = $validated['input']['order']['country'];
-    $matchedRules = collect($validated['input']['rules'])->filter(function($rule) use ($orderWeight,$orderCountry){
-        if(isset($rule['max_weight']) && $orderWeight > $rule['max_weight']){
-            return false;
-        }
-        if(isset($rule['country']) && $orderCountry !== $rule['country']){
-            return false;
-        }
-        return true;
-    })->sortBy('priority')->first();
-
-    if(empty($matchedRules)){
-        return response()->json([
-            'success'=>false,
-            'data'=>null,
-            'error'=>'No shipping method matches the order criteria.',
-        ],200);
     }
 
-    return response()->json([
-        'success'=>true,
-        'data'=>$matchedRules['method'],
-        'error'=>null,
-    ],200);
 
-}
+
+    public function mergeCarts(Request $request)
+    {
+        try {
+            $validate = Validator::make($request->all(), [
+                'input' => 'required|array',
+                'input.guest' => 'array|nullable',
+                'input.guest.*.id' => 'required|integer',
+                'input.guest.*.qty' => 'required|integer|min:0',
+                'input.user' => 'array|nullable',
+                'input.user.*.id' => 'required|integer',
+                'input.user.*.qty' => 'required|integer|min:0',
+            ], [
+                'input.required' => 'Input array is required.',
+                'input.array' => 'Input must be an array.',
+                'input.guest.required' => 'Guest cart is required.',
+                'input.guest.array' => 'Guest cart must be an array.',
+                'input.guest.*.id.required' => 'Each guest cart item must have an id.',
+                'input.guest.*.id.integer' => 'Each guest cart item id must be an integer.',
+                'input.guest.*.qty.required' => 'Each guest cart item must have a quantity.',
+                'input.guest.*.qty.integer' => 'Each guest cart item quantity must be an integer.',
+                'input.guest.*.qty.min' => 'Each guest cart item quantity must be at least 0.',
+                'input.user.required' => 'User cart is required.',
+                'input.user.array' => 'User cart must be an array.',
+                'input.user.*.id.required' => 'Each user cart item must have an id.',
+                'input.user.*.id.integer' => 'Each user cart item id must be an integer.',
+                'input.user.*.qty.required' => 'Each user cart item must have a quantity.',
+                'input.user.*.qty.integer' => 'Each user cart item quantity must be an integer.',
+                'input.user.*.qty.min' => 'Each user cart item quantity must be at least 0.',
+            ]);
+            if ($validate->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'data' => null,
+                    'error' => $validate->errors()->first(),
+                ], 422);
+            } else {
+
+                $validated = $validate->validated();
+                $guestCart = collect($validated['input']['guest']);
+                $userCart = collect($validated['input']['user']);
+                $mergeCart = $guestCart->merge($userCart)->groupBy('id')->map(function ($items, $id) {
+                    return [
+                        'id' => $id,
+                        'qty' => $items->sum('qty'),
+                    ];
+                })->values()->all();
+
+                return response()->json([
+                    'success' => true,
+                    'error' => null,
+                    'data' => $mergeCart,
+                ], 200);
+            }
+        } catch (\Exception $th) {
+            return response()->json([
+                'success' => false,
+                'data' => null,
+                'error' => $th->getMessage(),
+                'message' => 'An unexpected error occurred.',
+            ], 500);
+        }
+    }
+
+    public function findtwoNumberIndices(Request $request)
+    {
+
+        $validate = Validator::make($request->all(), [
+            'input' => 'required|array',
+            'input.nums' => 'required|array|min:2',
+            'input.nums.*' => 'required|numeric',
+            'input.target' => 'required|numeric',
+        ], [
+            'input.required' => 'Input array is required.',
+            'input.array' => 'Input must be an array.',
+            'input.nums.required' => 'Nums array is required.',
+            'input.nums.array' => 'Nums must be an array.',
+            'input.nums.min' => 'Nums array must have at least 2 elements.',
+            'input.nums.*.required' => 'Each num is required.',
+            'input.nums.*.numeric' => 'Each num must be numeric.',
+            'input.target.required' => 'Target is required.',
+            'input.target.numeric' => 'Target must be numeric.',
+
+        ]);
+
+        $validated = $validate->validated();
+        $nums = $validated['input']['nums'];
+        $target = $validated['input']['target'];
+        $numToIndex = [];
+        foreach ($nums as $index => $num) {
+            $complement = $target - $num;
+            if (isset($numToIndex[$complement])) {
+                return response()->json([
+                    'success' => true,
+                    'data' => [$numToIndex[$complement], $index],
+                    'error' => null,
+                ], 200);
+            }
+            $numToIndex[$num] = $index;
+        }
+        return response()->json([
+            'success' => false,
+            'data' => null,
+            'error' => 'No two numbers sum up to the target.',
+        ], 200);
+    }
+
+
+    public function shippingEngineRule()
+    {
+        $validate = Validator::make(request()->all(), [
+            'input' => 'required|array',
+            'input.order' => 'required|array',
+            'input.order.weight' => 'required|numeric|min:0',
+            'input.order.country' => 'required|string',
+            'input.rules' => 'required|array|min:1',
+            'input.rules.*.id' => 'required|integer',
+            'input.rules.*.max_weight' => 'nullable|numeric',
+            'input.rules.*.country' => 'nullable|string',
+            'input.rules.*.method' => 'required|string',
+            'input.rules.*.priority' => 'required|integer|min:0',
+        ], [
+            'input.required' => 'Input array is required.',
+            'input.array' => 'Input must be an array.',
+            'input.order.required' => 'Order object is required.',
+            'input.order.array' => 'Order must be an array.',
+            'input.order.weight.required' => 'Order weight is required.',
+            'input.order.weight.numeric' => 'Order weight must be numeric.',
+            'input.order.weight.min' => 'Order weight cannot be negative.',
+            'input.order.country.required' => 'Order country is required.',
+            'input.order.country.string' => 'Order country must be a string.',
+            'input.rules.required' => 'Rules array is required.',
+            'input.rules.array' => 'Rules must be an array.',
+            'input.rules.min' => 'At least one rule is required.',
+            'input.rules.*.id.required' => 'Each rule must have an id.',
+            'input.rules.*.id.integer' => 'Each rule id must be an integer.',
+            'input.rules.*.max_weight.numeric' => 'Rule max_weight must be numeric.',
+            'input.rules.*.max_weight.min' => 'Rule max_weight cannot be negative.',
+            'input.rules.*.country.string' => 'Rule country must be a string.',
+            'input.rules.*.method.required' => 'Each rule must have a shipping method.',
+            'input.rules.*.method.string' => 'Each rule method must be a string.',
+            'input.rules.*.priority.required' => 'Each rule must have a priority.',
+            'input.rules.*.priority.integer' => 'Each rule priority must be an integer.',
+            'input.rules.*.priority.min' => 'Each rule priority cannot be negative.',
+
+        ]);
+        if ($validate->fails()) {
+            return response()->json([
+                'success' => false,
+                'data' => null,
+                'error' => $validate->errors()->first(),
+            ], 422);
+        }
+
+        $validated = $validate->validated();
+        $orderWeight = $validated['input']['order']['weight'];
+        $orderCountry = $validated['input']['order']['country'];
+        $matchedRules = collect($validated['input']['rules'])->filter(function ($rule) use ($orderWeight, $orderCountry) {
+            if (isset($rule['max_weight']) && $orderWeight > $rule['max_weight']) {
+                return false;
+            }
+            if (isset($rule['country']) && $orderCountry !== $rule['country']) {
+                return false;
+            }
+            return true;
+        })->sortBy('priority')->first();
+
+        if (empty($matchedRules)) {
+            return response()->json([
+                'success' => false,
+                'data' => null,
+                'error' => 'No shipping method matches the order criteria.',
+            ], 200);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $matchedRules['method'],
+            'error' => null,
+        ], 200);
+    }
+
+    public function fraudDetector(Request $request)
+    {
+        $validate = Validator::make($request->all(), [
+            'input' => 'required|array',
+            'input.order' => 'required',
+            'input.order.amount' => 'required|numeric|min:0',
+            'input.order.country' => 'required|string',
+            'input.order.previous_orders' => 'required|integer|min:0',
+            'input.rules' => 'required',
+            'input.rules.max_amount' => 'required|integer',
+            'input.rules.blocked_countries' => 'required|array',
+            'input.rules.blocked_countries.*' => 'required|string',
+
+
+        ], [
+            'input.required' => 'Input array is required.',
+            'input.array' => 'Input must be an array.',
+            'input.order.required' => 'Order object is required.',
+            'input.order.amount.required' => 'Order amount is required.',
+            'input.order.amount.numeric' => 'Order amount must be numeric.',
+            'input.order.amount.min' => 'Order amount cannot be negative.',
+            'input.order.country.required' => 'Order country is required.',
+            'input.order.country.string' => 'Order country must be a string.',
+            'input.order.previous_orders.required' => 'Previous orders count is required.',
+            'input.order.previous_orders.integer' => 'Previous orders count must be an integer.',
+            'input.order.previous_orders.min' => 'Previous orders count cannot be negative.',
+            'input.rules.required' => 'Rules object is required.',
+            'input.rules.max_amount.required' => 'Max amount rule is required.',
+            'input.rules.max_amount.integer' => 'Max amount rule must be an integer.',
+            'input.rules.blocked_countries.required' => 'Blocked countries rule is required.',
+            'input.rules.blocked_countries.array' => 'Blocked countries must be an array.',
+            'input.rules.blocked_countries.*.required' => 'Each blocked country is required.',
+            'input.rules.blocked_countries.*.string' => 'Each blocked country must be a string'
+        ]);
+        if ($validate->fails()) {
+            return response()->json([
+                'success' => false,
+                'data' => null,
+                'error' => $validate->errors()->first(),
+            ], 422);
+        }
+
+        $validated = $validate->validated();
+        $order = $validated['input']['order'];
+        $rules = $validated['input']['rules'];
+
+        $check = collect([
+            'max_amount_check' => $order['amount'] > $rules['max_amount'],
+            'blocked_countries_check'=> collect($rules['blocked_countries'])->map(fn($country)=> strtoupper(trim($country)))->contains(strtoupper(trim($order['country']))),
+
+        ]);
+        if($check->contains(true)){
+            return response()->json([
+                'success' => true,
+                'data' => ["Flagged" => true],
+                'error' => null,
+            ], 200);
+        }
+        return response()->json([
+            'success' => true,
+            'data' => ["Flagged" => false],
+            'error' => null,
+        ], 200);
+    }
 }
